@@ -3,7 +3,8 @@ package routeros
 import (
 	"crypto/md5"
 	"crypto/tls"
-	"encoding/hex"
+
+	//"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -51,12 +52,12 @@ func GetPairVal(pairs []Pair, key string) (string, error) {
 type Client struct {
 	// Network Address.
 	// E.g. "10.0.0.1:8728" or "router.example.com:8728"
-	address  string
-	user     string
-	password string
-	debug    bool     // debug logging enabled
-	ready    bool     // Ready for work (login ok and connection not terminated)
-	conn     net.Conn // Connection to pass around
+	address   string
+	user      string
+	password  string
+	debug     bool     // debug logging enabled
+	ready     bool     // Ready for work (login ok and connection not terminated)
+	conn      net.Conn // Connection to pass around
 	TLSConfig *tls.Config
 }
 
@@ -114,32 +115,32 @@ func (c *Client) Connect(user string, password string) error {
 		return err
 	}
 
-	// try to log in
-	res, err := c.Call("/login", nil)
-	if err != nil {
-		return err
-	}
+	//try to log in
+	// res, err := c.Call("/login", nil)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// handle challenge/response
-	challengeEnc, err := res.GetPairVal("ret")
-	if err != nil {
-		return errors.New("Didn't get challenge from ROS")
-	}
-	challenge, err := hex.DecodeString(challengeEnc)
-	if err != nil {
-		return err
-	}
+	// challengeEnc, err := res.GetPairVal("ret")
+	// if err != nil {
+	// 	return errors.New("Didn't get challenge from ROS")
+	// }
+	// challenge, err := hex.DecodeString(challengeEnc)
+	// if err != nil {
+	// 	return err
+	// }
 	h := md5.New()
 	io.WriteString(h, "\000")
 	io.WriteString(h, password)
-	h.Write(challenge)
-	resp := fmt.Sprintf("00%x", h.Sum(nil))
+	//h.Write(challenge)
+	//resp := fmt.Sprintf("00%x", h.Sum(nil))
 	var loginParams []Pair
 	loginParams = append(loginParams, *NewPair("name", user))
-	loginParams = append(loginParams, *NewPair("response", resp))
+	loginParams = append(loginParams, *NewPair("password", password))
 
 	// try to log in again with challenge/response
-	res, err = c.Call("/login", loginParams)
+	res, err := c.Call("/login", loginParams)
 	if err != nil {
 		return err
 	}
